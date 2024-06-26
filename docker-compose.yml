@@ -1,0 +1,43 @@
+services:
+  postgres:
+    container_name: pgsql_final_ms
+    image: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+    networks:
+      - final-net
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: pgadmin_final_ms
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-mtidjanicherif@gmail.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_DEFAULT_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - 5050:80
+    networks:
+      - final-net
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+
+
+networks:
+  final-net:
+    driver: bridge
+
+volumes:
+  postgres:
+  pgadmin:
+  mongo:
