@@ -1,21 +1,23 @@
 const express = require('express');
 const  http = require('http')
+const messageRouter = require("./routes/message");
+const cors = require('cors');
 
 
 
+ const app = express();
+
+ app.use(express.json());
+ app.use(cors());
+
+ app.use('/messages', messageRouter);
+ 
 
 
 const port = process.env.PORT || 3000;
 const hostname = 'localhost';
 
-
-const server = http.createServer((req, res) => {
-    console.log(req.headers);
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/html');
-    res.end('<html><body><h1>Hello World!</h1></body></html>');
+app.listen(port, hostname, () => {
+    console.log(`Server running at http://${hostname}:${port}/`);
 });
 
-server.listen(port ,hostname,()=>{
-    console.log(`Server running at http://${hostname}:${port}/`)
-})
