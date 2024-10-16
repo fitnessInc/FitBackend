@@ -11,29 +11,35 @@ let messages = [];
 
 router.route('/')
   .get(async (req, res, next) => {
+
     try {
-      const db = await connection();
-      const collection = db.collection('messages')
+      // const db = await connection('testDBc')
+        connection();
+        const db = client.db('testDB')
+      
+      const collection =  db.collection('messages')
       // const { messageId } = req.params;
       // const message = await collection.findOne({ _id: new MongoClient.ObjectId(messageId) })
-      const message = req.body
-      const result = await collection.findOne(message)
+      const data = req.query
+      const message = await collection.findOne(data)
       if (message) {
         res.status(200).json(message)
       } else {
         res.status(404).json({ error: 'Message not found' });
-      }
-    } catch (err) {
+                     
+     } 
+
+     }catch (err) {
       console.log("error fetching message", err)
       res.status(500).json({ error: 'failed to fetch message' })
-
     }
-
+    
   })
   .post(async (req, res, next) => {
     
     try {
-      const db = await connection();
+       connection();
+       const db = client.db('testDB')
       const collection = db.collection('messages');
       const { sender, content } = req.body;
       const message = await collection.insertOne({sender,content, createdAt: new Date()})
