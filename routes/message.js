@@ -100,7 +100,7 @@ router.route('/:id')
 
   try{
      await connection();
-     const db=  client.db('tstDB');
+     const db=  client.db('testDB');
      const collection= db.collection('messages');
       const {id}=req.params;
       const {NewContent} = req.body;
