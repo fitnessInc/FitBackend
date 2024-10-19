@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { connection, client } = require('../conectiondb/dbConnect')
+const { connection, client } = require('../index')
 const { ObjectId } = require('mongodb');
 
 
