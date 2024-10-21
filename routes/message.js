@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { connection, client } = require('../index')
+const { connection, client } = require('../conectiondb/dbConnect')
 const { ObjectId } = require('mongodb');
+const {io} = require('../index');
 
 
 const app = express()
@@ -32,6 +33,8 @@ router.route('/')
     
   })
   .post(async (req, res, next) => {
+
+   
     
     try {
        await  connection();
@@ -39,6 +42,7 @@ router.route('/')
       const collection = db.collection('messages');
       const { sender,recipient, content } = req.body;
       const message = await collection.insertOne({sender,recipient,content, createdAt: new Date()})
+      io.emit('newMessage', { id: message.insertedId, sender, recipient, content })
       res.status(201).json({ id: message.insertedId, sender, content });
 
     }catch (err) {
@@ -75,15 +79,17 @@ router.route('/:id')
   
 })
 .delete(async(req,res,next)=>{
+  const { id } = req.params;
 
    try {
      await connection();
      const db= client.db("testDB");
      const collection= db.collection('messages');
-     const  {id} = req.params
+  
      const objectId= new ObjectId(id);
      const message= await collection.deleteOne({ _id: objectId });
      if (message.deletedCount===1){
+      io.emit('deleteContent',id)
        res.status(200).json({message:"message succefully deleted"})
      }else{
       res.status(404).json({error:'message  is not deleted ',err})
@@ -97,33 +103,25 @@ router.route('/:id')
 
 })
 .put(async(req,res)=>{
+  const {id}=req.params;
+  const {NewContent} = req.body;
+
 
   try{
      await connection();
      const db=  client.db('testDB');
      const collection= db.collection('messages');
-      const {id}=req.params;
-      const {NewContent} = req.body;
-      if (!ObjectId.isValid(id)) {
-        return res.status(400).json({ error: 'Invalid message ID' });
-      };
+      
       const objectId = new ObjectId(id);
-      const object= {_id:objectId}
-      const updateDocument= {
-        $set:{
-          content:NewContent
-        }
-      } 
-      const message = await collection.updateOne(object,updateDocument);
-      if (message.matchedCount === 0) {
-        return res.status(404).json({ error: 'Message not found' });
-      }
-  
-      if (message.modifiedCount === 1) {
+      const updatedocument  = await collection.updateOne({_id:objectId}, {$set:{content:NewContent}});
+      if (result.modifiedCount === 1) {
+        // Emit the updated message
+        io.emit('updateContent', { id, newContent: NewContent });
         return res.status(200).json({ message: 'Message successfully updated' });
       } else {
-        return res.status(200).json({ message: 'No changes made to the message' });
+        return res.status(404).json({ error: 'Message not found' });
       }
+      
         
   }catch (err) {
     res.status(500).json({ error: 'failed to update the  message' })
