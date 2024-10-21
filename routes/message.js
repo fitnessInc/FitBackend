@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { connection, client } = require('../conectiondb/dbConnect')
 const { ObjectId } = require('mongodb');
-const {io} = require('../index');
+const {getIo} = require("../socket")
+
 
 
 const app = express()
@@ -14,8 +15,8 @@ router.route('/')
 
     try {
    
-        await connection();
-        const db = client.db('testDB')
+      await connection();
+      const db = client.db('testDB')
       const collection =  db.collection('messages');
       const data = recipient? {recipient}:{}
       const message = await collection.findOne(data);
@@ -42,6 +43,7 @@ router.route('/')
       const collection = db.collection('messages');
       const { sender,recipient, content } = req.body;
       const message = await collection.insertOne({sender,recipient,content, createdAt: new Date()})
+      const io = getIo();
       io.emit('newMessage', { id: message.insertedId, sender, recipient, content })
       res.status(201).json({ id: message.insertedId, sender, content });
 
@@ -88,6 +90,7 @@ router.route('/:id')
   
      const objectId= new ObjectId(id);
      const message= await collection.deleteOne({ _id: objectId });
+     const io= getIo()
      if (message.deletedCount===1){
       io.emit('deleteContent',id)
        res.status(200).json({message:"message succefully deleted"})
@@ -114,7 +117,8 @@ router.route('/:id')
       
       const objectId = new ObjectId(id);
       const updatedocument  = await collection.updateOne({_id:objectId}, {$set:{content:NewContent}});
-      if (result.modifiedCount === 1) {
+      const io = getIo();
+      if (updatedocument.modifiedCount === 1) {
         // Emit the updated message
         io.emit('updateContent', { id, newContent: NewContent });
         return res.status(200).json({ message: 'Message successfully updated' });
