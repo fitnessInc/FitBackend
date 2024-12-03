@@ -20,27 +20,39 @@ function init(server) {
             const { sender, recipient, content } = data;
             const message = { sender, recipient, content, createdAt: new Date() };
             console.log(`Message: ${message}`);
-
             try {
+                // Connect to the database
                 await connection();
                 const db = client.db('testDB');
                 const collection = db.collection('messages');
+                
+                // Insert the message into the database
                 await collection.insertOne(message);
-                io.to(users[recipient]).emit('content', { from: sender, content });
+                
+                // Emit the message to the recipient if they are connected
+                if (users[recipient]) {
+                    io.to(users[recipient]).emit('newMessage', message);
+                    console.log(`Message sent to recipient: ${recipient}`);
+                } else {
+                    console.log(`Recipient ${recipient} is not connected`);
+                }
             } catch (err) {
-                console.log('Error persisting message', err);
+                console.error('Error persisting message', err);
             }
         });
 
+        // Handle content update
         socket.on('updateContent', async (data) => {
             const { id, newContent } = data;
-            console.log(data);
+            console.log('Update content:', data);
 
             try {
                 await connection();
                 const db = client.db('testDB');
                 const collection = db.collection('messages');
                 const objectId = new ObjectId(id);
+                
+                // Update the message content in the database
                 const update = await collection.updateOne(
                     { _id: objectId },
                     { $set: { content: newContent } }
@@ -49,7 +61,7 @@ function init(server) {
                 if (update.modifiedCount > 0) {
                     io.emit('updateContent', { id, newContent });
                 } else {
-                    console.log('Content is not updated');
+                    console.log('Content not updated');
                 }
             } catch (err) {
                 console.log("Error updating message", err);
@@ -69,7 +81,9 @@ function init(server) {
                 console.log("Error deleting message", err);
             }
         });
+       
 
+        // Handle user disconnect
         socket.on('disconnect', () => {
             for (const username in users) {
                 if (users[username] === socket.id) {
@@ -80,14 +94,16 @@ function init(server) {
             }
         });
     });
-};
+}
 
+// Function to get the socket.io instance
 function getIo() {
     if (!io) {
         throw new Error('Socket.io not initialized');
     }
     return io;
 }
+
 
 // Export the init function to be called in your server file
 module.exports = { init, getIo };
