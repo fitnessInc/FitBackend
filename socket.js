@@ -2,10 +2,16 @@ const { Server } = require('socket.io');
 const { client, connection } = require('./conectiondb/dbConnect');
 const { ObjectId } = require('mongodb');
 
+
 let io; // Will hold the socket instance
 
 function init(server) {
-    io = new Server(server);
+    io = new Server(server,{
+        cors:{
+            origin:'*',
+            methods:['GET','POST','DELET','UPDATE']
+        }
+    });
     const users = {};
 
     io.on('connection', (socket) => {
