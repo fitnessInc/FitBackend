@@ -13,17 +13,9 @@ app.use(express.json());
 router.route('/')
 
 
-    .post([
-        body('full_Name').notEmpty().withMessage('firstname is required'),
-        body('email').isEmail().withMessage('Please enter a valid email'),
-        body('certificate').notEmpty().withMessage('certificate is required for trainer else just inpute your status ')
-
-    ], async (req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-             return res.status(400).json({ errors: errors.array() })
-
-        }
+    .post(  async (req,res)=>{
+           
+        
 
         try {
             const {  full_Name, email, certificate, Function  } = req.body;
@@ -42,13 +34,12 @@ router.route('/')
                 user_id: user._id,
                 full_Name,
                 email,
-                certificate
+                certificate,
+                Function
             });
               const savedProfile = await profile.save();
 
-            // Associate the profile with the user (optional but recommended)
-            // user.profile_id = profile._id;
-            // await user.save();
+            
 
             res.status(201).json({ msg: 'Profile created successfully', profile });
         } catch (err) {
@@ -83,19 +74,25 @@ router.route('/:user_id')
 
             const { user_id } = req.params;
             const data = req.body;
-            const update ={$set:data};
+            console.log('updatedata:',data)
+           
+            if(! user_id){
+                return res.status(400).json({message:'user_id is required'})
+            }
 
-            const result = await db.collection('Profile').updateOne(
+            const result = await Profile.updateOne(
                 {user_id},
-                update
+                {$set:data},
             );
+              console.log("update Result",result);
 
-            if (result.matchedCount === 0 && result.modifiedCound===0) {
+            if (result.matchedCount === 0 && result.modifiedCount===0) {
                 return res.status(404).json({ message: ' profile not found ' });
               }; 
               res.json ({msg:'profile updated successfully'})
 
         }catch(error){
+            console.error('Error updating profile:', error);
             res.status(500).json({msg:' server error'})
         }
 
@@ -110,13 +107,13 @@ router.route('/:user_id')
              return res.status(404).json({msg:'profile not found'});
           };
 
-          const result =  await db.collection('Pofile').deleteOne(profile);
-           if (result.deletedCount===0){
-            return res.status(404).json({msg:'profile not found'})
-           }
+         await Profile.deleteOne({user_id});
+         res.json({msg:'profile  succefully deleted'})
+          
 
 
        }catch (error) {
+        console.error('Error deleting Profile:', error);
         console.error('Error deleting Profile:', error);
        }
 

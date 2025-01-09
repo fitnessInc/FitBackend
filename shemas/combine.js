@@ -24,6 +24,7 @@ const profileSchema= ({
     full_Name:{type:String,required:true},
     email: {type:String,required:true},
     certificate:{type:String},
+    Function:{type:String},
 
 
 });
