@@ -2,10 +2,10 @@ const { MongoClient } = require('mongodb');
 const express = require('express');
 
 
+const uri = 'mongodb://localhost:27017/testDB';
+// const app = express();
+// const port = 3000;
 
-const app = express();
-const port = 3000;
-const uri = 'mongodb://localhost:27017/mydatabase';
 const client = new MongoClient(uri,{
 
     useNewUrlParser: true,
@@ -20,7 +20,8 @@ const client = new MongoClient(uri,{
        console.log('Connected to the database.');
 
     }catch (err){
-        console.log(err)
+        console.error('Failed to connect to the database', err);
+        process.exit(1);
     }
  }
 

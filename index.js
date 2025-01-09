@@ -2,25 +2,45 @@
  const express = require('express');
 const http = require('http');
 const messageRouter = require("./routes/message");
+const profileRouter =  require('./routes/userProfile')
 const cors = require('cors');
 const { client, connection } = require('./conectiondb/dbConnect');
 const { init } = require('./socket');
+      
 
+//  creation of express application //
 const app = express();
 const server = http.createServer(app);
 
+//middleware//
+  
 app.use(express.json());
 app.use(cors());
 
 
-
+//routes//
 app.use('/messages', messageRouter);
+app.use('/profiles' ,profileRouter)
+
+//port hostname//
 
 const port = process.env.PORT || 3000;
 const hostname = 'localhost';
 
-init(server); // Initialize socket.io here
+//db connection//
 
-server.listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
+connection().then(()=>{
+
+    // Initialize Socket.io after DB connection//
+
+    init(server);
+
+
+     // Start the server only after the DB connection is successful//
+    server.listen(port, hostname, () => {
+        console.log(`Server running at http://${hostname}:${port}/`);
+    });
+
+}).catch((err) => {
+    console.error('Failed to start the server because the DB connection failed.', err);
 });

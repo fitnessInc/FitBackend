@@ -38,7 +38,7 @@ function init(server) {
                 // Emit the message to the recipient if they are connected
                 if (users[recipient]) {
                     io.to(users[recipient]).emit('newMessage', message);
-                    console.log(`Message sent to recipient: ${recipient}`);
+                    console.log(`Message sent to recipient:${recipient}, message  :${content}`)
                 } else {
                     console.log(`Recipient ${recipient} is not connected`);
                 }
