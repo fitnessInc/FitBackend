@@ -36,6 +36,7 @@ const Profile = mongoose.model('Profile', profileSchema)
 const userSchema = new Schema({
     full_Name: { type: String, required: true },
     Function: { type: String},
+    certificate:{ type: String},
     profile_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Profile' },
     videos_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Video' }],
     photos_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Photo' }]

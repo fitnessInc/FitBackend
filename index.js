@@ -2,7 +2,8 @@
  const express = require('express');
 const http = require('http');
 const messageRouter = require("./routes/message");
-const profileRouter =  require('./routes/userProfile')
+const profileRouter =  require('./routes/userProfile');
+const userRouter = require('./routes/user')
 const cors = require('cors');
 const { client, connection } = require('./conectiondb/dbConnect');
 const { init } = require('./socket');
@@ -20,7 +21,8 @@ app.use(cors());
 
 //routes//
 app.use('/messages', messageRouter);
-app.use('/profiles' ,profileRouter)
+app.use('/profiles' ,profileRouter);
+app.use('/users',userRouter)
 
 //port hostname//
 

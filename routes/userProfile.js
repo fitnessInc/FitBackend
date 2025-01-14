@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { Photo, Profile, User, Video }= require('../shemas/combine')
+const { Photo, Profile, User, Video }= require('../shemas/combine');
 
 const { body, validationResult } = require('express-validator')
 
@@ -19,16 +19,14 @@ router.route('/')
 
         try {
             const {  full_Name, email, certificate, Function  } = req.body;
-            let user = await User.findOne({email:email});
+            let user = await User.findOne({full_Name});
             if (!user) {
-                user= new User({
-                    full_Name: 
-                    Function
-                    
-                });
-                await  user.save()
-            };
+                user = new User({ full_Name, Function, certificate });
+                await user.save();
 
+                
+               
+            }
 
             const profile = new Profile({
                 user_id: user._id,
