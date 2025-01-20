@@ -3,7 +3,8 @@ const serviceAccount = require('./serviceAccountKey.json');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    storageBucket:'sporty-6fdac.appspot.com'
+    storageBucket:'sporty-6fdac.appspot.com',
+    projectId: serviceAccount.project_id
 
 
 });

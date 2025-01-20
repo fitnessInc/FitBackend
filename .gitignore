@@ -1,0 +1,7 @@
+# Node.js dependencies
+node_modules/
+#firebase/serviceAccountKey
+firebase/serviceAccountKey.json
+#files for testing  connectivity and  initialisation
+test.js
+
