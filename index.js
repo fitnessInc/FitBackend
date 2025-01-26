@@ -3,7 +3,8 @@
 const http = require('http');
 const messageRouter = require("./routes/message");
 const profileRouter =  require('./routes/userProfile');
-const userRouter = require('./routes/user')
+const userRouter = require('./routes/user');
+const uploadRouter = require('./routes/fileUpload')
 const cors = require('cors');
 const { client, connection } = require('./conectiondb/dbConnect');
 const { init } = require('./socket');
@@ -22,7 +23,8 @@ app.use(cors());
 //routes//
 app.use('/messages', messageRouter);
 app.use('/profiles' ,profileRouter);
-app.use('/users',userRouter)
+app.use('/users',userRouter);
+app.use('/uploads', uploadRouter)
 
 //port hostname//
 
