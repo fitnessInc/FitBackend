@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { Photo, Profile, User, Video } = require('../shemas/combine');
-
-
+const {  User } = require('../shemas/combine');
 
 
 const app = express()

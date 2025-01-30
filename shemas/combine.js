@@ -10,7 +10,7 @@ mongoose.connect('mongodb://localhost:27017/testDB', {
 
 
 const PhotoSchema = new Schema({
-    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User',  },
     title: { type: String, },
     url: { type: String, required:true },
     caption: { type: String }
@@ -46,7 +46,7 @@ const User =mongoose.model('User', userSchema);
 module .exports= User; 
 
 const videoSchema = new Schema({
-    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User',  },
     title: { type: String },
     url: { type: String, required: true },
     caption: { type: String }
