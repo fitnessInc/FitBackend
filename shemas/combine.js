@@ -13,7 +13,8 @@ const PhotoSchema = new Schema({
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User',  },
     title: { type: String, },
     url: { type: String, required:true },
-    caption: { type: String }
+    caption: { type: String },
+    filePath: { type: String},
 });
 
 const Photo = mongoose.model('Photo', PhotoSchema);
@@ -49,7 +50,8 @@ const videoSchema = new Schema({
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User',  },
     title: { type: String },
     url: { type: String, required: true },
-    caption: { type: String }
+    caption: { type: String },
+    filePath: { type: String},
 });
 
 const Video = mongoose.model('Video', videoSchema);
