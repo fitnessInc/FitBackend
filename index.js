@@ -1,4 +1,4 @@
-
+require('dotenv').config();
  const express = require('express');
 const http = require('http');
 const messageRouter = require("./routes/message");
@@ -6,8 +6,10 @@ const profileRouter =  require('./routes/userProfile');
 const userRouter = require('./routes/user');
 const uploadRouter = require('./routes/fileUpload')
 const cors = require('cors');
-const { client, connection } = require('./conectiondb/dbConnect');
+
+const db= require('./conectiondb/dbConnect')
 const { init } = require('./socket');
+
       
 
 //  creation of express application //
@@ -33,18 +35,27 @@ const hostname = 'localhost';
 
 //db connection//
 
-connection().then(()=>{
+(async ()=>{
+    try{
+        await db.connect();// data base connection 
+    init(server)// second sock.Io connection 
+ 
 
-    // Initialize Socket.io after DB connection//
+    // then server boostrap 
+     server.listen(port,hostname,()=>{
+        console.log(`the middle man is running at http://${hostname}:${port}`);
+     })
+    }catch(err){
+        console.log('faild to boostrap the middle man ', err );
+        process.exit(1)
+    }
+})();
 
-    init(server);
+const shutdown = async()=>{
+    console.log('middle man is shutting down');
+    await db.disconnect();
+    server.close(()=>process.exit(0))
+};
 
-
-     // Start the server only after the DB connection is successful//
-    server.listen(port, hostname, () => {
-        console.log(`Server running at http://${hostname}:${port}/`);
-    });
-
-}).catch((err) => {
-    console.error('Failed to start the server because the DB connection failed.', err);
-});
+process.on('SIGINT', shutdown);// will be fire in production mode
+process.on('SIGTERM', shutdown);// will be fire in production mode

@@ -1,28 +1,68 @@
-const { MongoClient } = require('mongodb');
-const express = require('express');
+require('dotenv').config();
 
 
-const uri = 'mongodb://localhost:27017/testDB';
-// const app = express();
-// const port = 3000;
+const mongoose = require('mongoose');
 
-const client = new MongoClient(uri,{
+class Datab {
+  constructor() {
+    this._setupEvents();
+  }
 
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    
+  async connect() {
+    const options = {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
+      minPoolSize: 5,
+      retryWrites: true,
+      w: 'majority',
+    };
 
-});
+    try {
+      await mongoose.connect(process.env.MONGODB_URI, options);
+      console.log('✅ MongoDB connected successfully');
+    } catch (err) {
+      console.error('❌ MongoDB connection failed:', err.message);
 
- async function connection(){
-    try{
-       await client.connect();
-       console.log('Connected to the database.');
-
-    }catch (err){
-        console.error('Failed to connect to the database', err);
+      // Fail fast in production misconfig
+      if (process.env.NODE_ENV === 'production') {
         process.exit(1);
-    }
- }
+      }
 
- module.exports ={client,connection}
+      setTimeout(() => this.connect(), 5000);
+    }
+  }
+
+  _setupEvents() {
+    mongoose.connection.on('connected', () => {
+      console.log('📡 Mongoose connected');
+    });
+
+    mongoose.connection.on('error', (err) => {
+      console.error('❌ Mongoose error:', err);
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      console.warn('⚠️ Mongoose disconnected');
+    });
+  }
+
+  async disconnect() {
+    try {
+      await mongoose.connection.close();
+      console.log('🔌 MongoDB connection closed');
+    } catch (err) {
+      console.error('Error closing DB:', err);
+    }
+  }
+
+  getNativeDb() {
+    return mongoose.connection.db;
+  }
+
+  getNativeClient() {
+    return mongoose.connection.getClient();
+  }
+}
+
+module.exports = new Datab();

@@ -67,7 +67,6 @@ console.log("User ID:", id);
 
           await metadataObject.save();
 
-          // Populate user with metadata
           const user = await User.findById(id);
 
           if (!user) {
