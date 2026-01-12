@@ -1,4 +1,10 @@
+console.log('CWD:', process.cwd());
+console.log('ENV URI:', process.env.MONGODB_URI);
 require('dotenv').config();
+
+if (!process.env.MONGODB_URI){
+    throw new Error('db uri is  undefined ')
+};
  const express = require('express');
 const http = require('http');
 const messageRouter = require("./routes/message");
@@ -32,6 +38,7 @@ app.use('/uploads', uploadRouter)
 
 const port = process.env.PORT || 3000;
 const hostname = 'localhost';
+// console.log("environemt var:",process.env)
 
 //db connection//
 

@@ -4,4 +4,5 @@ node_modules/
 firebase/serviceAccountKey.json
 #files for testing  connectivity and  initialisation
 test.js
+.env
 
