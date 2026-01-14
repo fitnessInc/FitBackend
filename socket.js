@@ -1,6 +1,7 @@
 const { Server } = require('socket.io');
 const { client, connection } = require('./conectiondb/dbConnect');
 const { ObjectId } = require('mongodb');
+const Message = require('./shemas/messageSchema')
 
 
 let io; // Will hold the socket instance
@@ -28,7 +29,8 @@ function init(server) {
             console.log(`Message: ${message}`);
             try {
                 // Connect to the database
-                await connection();
+                // await connection();
+                  await db()
                 const db = client.db('testDB');
                 const collection = db.collection('messages');
                 
