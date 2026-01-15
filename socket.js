@@ -23,19 +23,20 @@ function init(server) {
             console.log(`User ${username} registered with socket ID: ${socket.id}`);
         });
 
-        socket.on('newMessage', async (data) => {
-            const { sender, recipient, content } = data;
-            const message = { sender, recipient, content, createdAt: new Date() };
-            console.log(`Message: ${message}`);
+        socket.on('newMessage', async ({sender,recipient,content}) => {
+     
+        
             try {
-                // Connect to the database
-                // await connection();
-                  await db()
-                const db = client.db('testDB');
-                const collection = db.collection('messages');
-                
-                // Insert the message into the database
-                await collection.insertOne(message);
+                   // create new message documment in mongo via mongoose 
+
+                   const message=  await new Message.create({
+                      sender,
+                      recipient,
+                      content
+                   });
+
+                   console.log(' message inserted in the db', message)
+                 
                 
                 // Emit the message to the recipient if they are connected
                 if (users[recipient]) {
@@ -50,23 +51,19 @@ function init(server) {
         });
 
         // Handle content update
-        socket.on('updateContent', async (data) => {
-            const { id, newContent } = data;
-            console.log('Update content:', data);
+        socket.on('updateContent', async ({id, newContent}) => {
+            console.log( id , newContent);
 
             try {
-                await connection();
-                const db = client.db('testDB');
-                const collection = db.collection('messages');
-                const objectId = new ObjectId(id);
+              const updated= await Message.findByIdAndUpdate(
+                id,
+                {conten:newContent},
+                {new:true}
+              )
                 
-                // Update the message content in the database
-                const update = await collection.updateOne(
-                    { _id: objectId },
-                    { $set: { content: newContent } }
-                );
-
-                if (update.modifiedCount > 0) {
+                
+                // emiting the updated content
+                if (updated) {
                     io.emit('updateContent', { id, newContent });
                 } else {
                     console.log('Content not updated');
@@ -78,11 +75,10 @@ function init(server) {
 
         socket.on('deleteContent', async (id) => {
             try {
-                await connection();
-                const db = client.db('testDB');
-                const collection = db.collection('messages');
-                const deleteOp = await collection.deleteOne({ _id: new ObjectId(id) });
-                if (deleteOp.deletedCount > 0) {
+                  const deleted = await Message.findByIdAndDelete(id)
+
+                  
+                if (deleted) {
                     io.emit('deleteContent', { id });
                 }
             } catch (err) {

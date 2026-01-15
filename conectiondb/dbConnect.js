@@ -38,7 +38,7 @@ class Datab {
 
   _setupEvents() {
     mongoose.connection.on('connected', () => {
-      console.log('📡 Mongoose connected');
+      console.log(' Mongoose connected');
     });
 
     mongoose.connection.on('error', (err) => {
@@ -50,7 +50,7 @@ class Datab {
     });
 
     mongoose.connection.on('reconnected', () => {
-      console.log('🔄 Mongoose reconnected');
+      console.log(' Mongoose reconnected');
     });
   }
 
