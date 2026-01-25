@@ -1,7 +1,7 @@
 const { Server } = require('socket.io');
 const { client, connection } = require('./conectiondb/dbConnect');
 const { ObjectId } = require('mongodb');
-const Message = require('./shemas/messageSchema')
+const Message = require('./schemas/messageSchema')
 
 
 let io; // Will hold the socket instance

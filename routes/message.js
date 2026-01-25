@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getIo } = require("../socket");
-const Message = require('../shemas/messageSchema')
+const Message = require('../schemas/messageSchema')
 
 
 

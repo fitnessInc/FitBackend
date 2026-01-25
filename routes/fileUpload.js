@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const busboy = require('busboy');
-const { Photo, Profile, User, Video } = require('../shemas/combine');
+const { Photo, Profile, User, Video } = require('../schemas/combine');
 const {bucket} = require('../firebase/firebaseConfig');
 
 const app = express()

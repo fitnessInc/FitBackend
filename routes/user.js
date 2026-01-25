@@ -3,12 +3,9 @@ const router = express.Router();
 const mongoose = require('mongoose')
 
 // const {  User } = require('../shemas/combine');
-const User = require('../shemas/usersSchema')
+const User = require('../schemas/usersSchema')
 
 
-
-const app = express()
-app.use(express.json());
 
 router.route('/')
 
@@ -56,7 +53,7 @@ router.route('/:id')
 
         } catch (err) {
             console.log(err.message);
-            res.status(500).json({ msg: ' erro server' })
+            res.status(500).json({ msg: ' Server Error' })
         }
 
     })
@@ -81,7 +78,7 @@ router.route('/:id')
             if (!result) {
                 return res.status(404).json({ msg: 'user not found' });
             }
-            res.status(200).json({ msg: 'user  update succefully ' })
+            res.status(200).json({ msg: 'user  update successfully ' })
 
 
         } catch (err) {
@@ -103,7 +100,7 @@ router.route('/:id')
             if (result.deletedCount === 0) {
                 return res.status(404).json({ msg: 'User not found' });
             }
-            res.status(200).json({ msg: 'User  deleted succefully ' })
+            res.status(200).json({ msg: 'User  deleted successfully ' })
 
 
         } catch (err) {
