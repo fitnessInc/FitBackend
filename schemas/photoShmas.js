@@ -8,7 +8,7 @@ const PhotoSchema = new Schema({
     url: { type: String, required:true },
     thumbnail:{type: String},
     caption: { type: String }
-});
+}, { timestamps: true });
 
 const Photo = mongoose.model('Photo', PhotoSchema);
 module.exports  = Photo;

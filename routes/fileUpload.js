@@ -2,26 +2,27 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const busboy = require('busboy');
-const { Photo, Profile, User, Video } = require('../schemas/combine');
+// const { Photo, Profile, User, Video } = require('../schemas/combine');
+const Photo = require('../schemas/photoShmas');
+const User = require('../schemas/usersSchema');
+const Video = require("../schemas/videoSchema")
 const {bucket} = require('../firebase/firebaseConfig');
 
-const app = express()
-app.use(express.json());
 
-router.route('/:id')
+router.route('/user/:id')
 
 .post(async(req,res)=>{
     
 
-const  id  = (req.params.id || '').trim();
+const  id  = (req.params.id || '').trim();// .trim() revoving space  in the string
 
 console.log("User ID:", id);
 
-  const bb = busboy({ headers: req.headers });
+  const bb = busboy({ headers: req.headers });// it tells busboy how the body is formatted 
 
 
 
-  let metadata = {};
+  let metadata = {};// a holder container of  extracted form-field tha is used later with the file 
   bb.on('field', (fieldname, value) => {
     metadata[fieldname] = value;
   });
@@ -31,8 +32,10 @@ console.log("User ID:", id);
       return res.status(400).json({ success: false, message: 'Filename is missing' });
     }
 
-    const filePath = `metadata/${id}/${Date.now()}_${filename}`;
-    const firebaseFile = bucket.file(filePath);
+    const filePath = `metadata/${id}/${Date.now()}_${filename}`;// creating a file-path
+    const firebaseFile = bucket.file(filePath);// initiatting the file-path in  firebase  via bucket
+
+    // the bellow file.pipe streaming   file  chunk parse from  the request to firebase   and the  finish is call  or process after the  piping process then  make it  public access and inserting in mongodb 
 
     file.pipe(
       firebaseFile.createWriteStream({

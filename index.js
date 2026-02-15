@@ -10,7 +10,8 @@ const http = require('http');
 const messageRouter = require("./routes/message");
 const profileRouter =  require('./routes/userProfile');
 const userRouter = require('./routes/user');
-const uploadRouter = require('./routes/fileUpload')
+const uploadRouter = require('./routes/fileUpload');
+const mediaUploadRouter = require('./routes/mediaUpload')
 const cors = require('cors');
 
 const db= require('./conectiondb/dbConnect')
@@ -32,7 +33,8 @@ app.use(cors());
 app.use('/messages', messageRouter);
 app.use('/profiles' ,profileRouter);
 app.use('/users',userRouter);
-app.use('/uploads', uploadRouter)
+// app.use('/uploads', uploadRouter);
+app.use('/upload',mediaUploadRouter)
 
 //port hostname//
 

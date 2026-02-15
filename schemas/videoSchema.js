@@ -8,7 +8,7 @@ const videoSchema = new Schema({
     url: { type: String, required: true },
     thumbnail:{type: String},
     description: { type: String }
-});
+}, { timestamps: true });
 
 const Video = mongoose.model('Video', videoSchema);
 module.exports  = Video;
