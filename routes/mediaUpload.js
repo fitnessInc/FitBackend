@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = require('express').Router()
 
@@ -5,18 +6,30 @@ const Photo = require('../schemas/photoShmas');
 const User = require('../schemas/usersSchema');
 const Video = require("../schemas/videoSchema")
 const { bucket } = require('../firebase/firebaseConfig');
+// const Profile = require('../schemas/profileSchema')
 
 
 
 router.route('/profile/media')
 
     .post(async (req, res) => {
+      
 
         try {
 
             // const userId = req.user.id;
             const userId = '670b31d45c1c769ac8163e68'
             const { mediaType, url, thumbnail, filePath, title, caption } = req.body;
+            let userObject;
+
+            if(!userId){
+
+                userObject= await User.create({
+                    Full_Name:"nanito",
+                    Function:"trainer"
+                })
+                 
+            }
 
             if (!mediaType || !['photo', 'video'].includes(mediaType)) {
                 return res.status(400).json({ success: false, message: " not a media" })
@@ -47,12 +60,19 @@ router.route('/profile/media')
                 })
 
             await fileType.save();
+              
 
-            const userUpdate = mediaType === 'photo'
-                ? { $push: { photos_ids: fileType._id } }
-                : { $push: { videos_ids: fileType._id } }
+             const profile = await Profile.findOne({user_id:userId})
 
-            await User.findByIdAndUpdate(userId, userUpdate)
+             if(!profile){
+                return res.status(404).json({message: 'you must have a Profile'})
+             }
+               await  Profile.findByIdAndUpdate(
+                {user_id:userId},
+                { $push: { gallery: { media: fileType._id } }}
+
+               )
+            
 
             return res.status(201).json({
                 success: true,
@@ -124,11 +144,3 @@ router.route('/profile/media/:userId/:mediaId')
     })
 
 module.exports = router
-
-
-
-
-
-
-
-

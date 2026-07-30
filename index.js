@@ -11,7 +11,8 @@ const messageRouter = require("./routes/message");
 const profileRouter =  require('./routes/userProfile');
 const userRouter = require('./routes/user');
 const uploadRouter = require('./routes/fileUpload');
-const mediaUploadRouter = require('./routes/mediaUpload')
+const galleryThumbUrl= require('./routes/thumbnailUrl')
+
 const cors = require('cors');
 
 const db= require('./conectiondb/dbConnect')
@@ -29,12 +30,14 @@ app.use(express.json());
 app.use(cors());
 
 
-//routes//
+//routes// mounting the routes and defining prefixes for routes 
 app.use('/messages', messageRouter);
 app.use('/profiles' ,profileRouter);
 app.use('/users',userRouter);
 // app.use('/uploads', uploadRouter);
-app.use('/upload',mediaUploadRouter)
+app.use('/upload',uploadRouter);
+// gallery  thumbnail  route mounting 
+app.use('/gaThumbUrl',galleryThumbUrl)
 
 //port hostname//
 
