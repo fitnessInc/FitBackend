@@ -1,15 +1,15 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-
-
 const userSchema = new Schema({
     Full_Name: { type: String, required: false},
     Function: { type: String, required: false},
+    firebaseUid: { type: String, required: true, unique: true },
     profile_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Profile' },
     
     
 });
+
 
 
 module.exports=mongoose.model('User', userSchema);

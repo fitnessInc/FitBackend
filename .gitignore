@@ -1,8 +1,11 @@
 # Node.js dependencies
-node_modules/
+node_modules
 #firebase/serviceAccountKey
 firebase/serviceAccountKey.json
 #files for testing  connectivity and  initialisation
 test.js
 .env
+socket.js
+messageSchema.js
+message.js
 

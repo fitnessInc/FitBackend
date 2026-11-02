@@ -6,27 +6,6 @@ const {bucket} = require('./firebaseConfig');
 async function  uploadFile(filePath,userId){
      
 
-         
-
-            // try{
-            //     const fileName = ` metadata/${userId}/${Date.now()}_${path.basename(filePath)}`;
-            //     const file = bucket.file(fileName);
-            //     await  file.save(fs.readFileSync(filePath),{resumable:false});
-            //     await file.makePublic();
-
-                
-            //     return{
-            //         success:true,
-            //         url:`https://storage.googleapis.com/${bucket.name}/${fileName}`
-            //     }
-
-
-            // }catch(error){
-            // throw new Error(`Failed to upload ${filePath}: ${error.message}`);
-                
-            // }
-
-
         const fileName = ` metadata/${userId}/${Date.now()}_${path.basename(filePath)}`;
         const file = bucket.file(fileName);
 

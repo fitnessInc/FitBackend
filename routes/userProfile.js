@@ -5,17 +5,146 @@ const mongoose = require('mongoose');
 // const { Photo, Profile, User, Video }= require('../schemas/combine');
 const User = require('../schemas/usersSchema');
 const Profile = require("../schemas/profileSchema");
-const Photo= require('../schemas/photoSchemas');
-const Video= require('../schemas/videoSchema')
-
+const Photo = require('../schemas/photoSchemas');
+const Video = require('../schemas/videoSchema');
+const { bucket } = require('../firebase/firebaseConfig')
 const { body, validationResult } = require('express-validator');
 const { error } = require('node:console');
+const chekFbToken = require('./midFirebaseToken');
+const checkCurrentUser = require('./checkCurrentUser')
 
+
+
+function cleanGallery(gallery) {
+
+    return (
+        gallery
+            .map((item) => {
+                if (item.photo) {
+                    return {
+                        type: 'photo',
+                        id: item.photo._id,
+                        url: item.photo.url,
+                        thumbnail: item.photo.thumbnail,
+                        title: item.photo.title,
+                        caption: item.photo.caption,
+                    };
+                }
+                if (item.video) {
+                    return {
+                        type: 'video',
+                        id: item.video._id,
+                        url: item.video.url,
+                        thumbnail: item.video.thumbnail,
+                        title: item.video.title,
+                        description: item.video.description,
+                    };
+                }
+                return null;
+            })
+            .filter(Boolean)
+
+    )
+
+};
+function findGallery(userId) {
+
+    return (
+        Profile.findOne({ user_id: userId })
+            .populate('gallery.photo')
+            .populate('gallery.video')
+    )
+
+};
+
+function coalescingProfile(profile) {
+
+    return {
+        full_Name: profile.full_Name,
+        certification: profile.certification,
+        function: profile.function,
+        avatar: profile.avatar?.uri ?? null,
+    };
+
+
+}
+
+// the  below route get all profiles just bio 
+
+router.route(("/"))
+
+.get(chekFbToken, checkCurrentUser, async (req, res) => {
+    try {
+      const profiles = await Profile.find({ user_id: { $ne: req.currentUser._id } })
+        .select('-email -gallery -__v');
+      res.status(200).json({ success: true, profiles });
+    } catch (e) {
+      console.log('List profiles error:', e);
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+  });
+    
+
+        
+
+// the bellow  route fetch   user's own gallery 
+
+router.route('/me/gallery')
+    .get(chekFbToken,checkCurrentUser,async (req, res) => {
+
+        try {
+        
+            const profile = await findGallery(req.currentUser._id);
+            if (!profile) return res.status(404).json({ error: 'Profile not found' });
+
+            res.status(200).json({ success: true, isOwner: true,bioAvatar:coalescingProfile(profile),gallery: cleanGallery(profile.gallery) })
+        } catch (e) {
+            console.log(e);
+            res.status(500).json({ success: false, message: 'server error ' })
+        }
+
+    })
+// route  post and update  bio 
+router.route('/me')
+    .put(chekFbToken, checkCurrentUser, async (req, res) => {
+        try {
+            const bio = ['full_Name', 'certification', 'function'];
+            const bioUpdate = {};
+
+            for (const field of bio) {
+                if (typeof req.body[field] === 'string') {
+                    bioUpdate[field] = req.body[field].trim();
+                }
+            }
+
+            if (Object.keys(bioUpdate).length === 0) {
+                return res.status(400).json({ success: false, message: 'Nothing to update' });
+            }
+
+            const profile = await Profile.findOneAndUpdate(
+                { user_id: req.currentUser._id },
+                { $set: bioUpdate },
+                { new: true, runValidators: true },
+                {upsert:true}
+            );
+
+            if (!profile) {
+                return res.status(404).json({ success: false, message: 'Profile not found' });
+            }
+
+            res.json({ success: true, message: 'Profile updated', profile });
+        } catch (e) {
+            console.log('Edit profile error:', e);
+            res.status(500).json({ success: false, message: 'Server error' });
+        }
+    });
 
 
 router.route('/profile/:userId')
 
     .get(async (req, res) => {
+
+        //get profile Bio 
 
         const { userId } = req.params
 
@@ -81,8 +210,10 @@ router.route("/profiles/:id")
 
     .post(async (req, res) => {
 
+        // post profile bio 
+
         const { id } = req.params;
-        const { first_name, last_name, certification, avatar, gallery } = req.body;
+        const { Full_Name, Certification, Function } = req.body;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ msg: 'Invalid user ID' });
@@ -91,7 +222,7 @@ router.route("/profiles/:id")
         try {
 
             const yesProfile = await Profile.findOne({ user_id: id })
-            if (yesProfile) {
+            if (!yesProfile) {
                 return res.status(400).json({ error: 'profile exite ' })
             }
 
@@ -99,11 +230,10 @@ router.route("/profiles/:id")
 
             const profile = await Profile.create({
                 user_id: id,
-                first_name,
-                last_name,
-                certification,
-                avatar,
-                gallery
+                Full_Name,
+                Certification,
+                Function,
+                Email
 
 
 
@@ -119,6 +249,7 @@ router.route("/profiles/:id")
 
 
     })
+
 
     .put(async (req, res) => {
 
@@ -181,11 +312,6 @@ router.route("/profiles/:id")
 
 
 
-
-
-
-
-
     });
 
 
@@ -196,9 +322,9 @@ router.route('/:user_id')
     .get(async (req, res) => {
         try {
             const { user_id } = req.params;
-            const profile = await Profile.findOne({ user_id });
 
-            if (!profile) {
+
+            if (!user_id) {
                 return res.status(404).json({ msg: 'profile not found' });
             }
 
@@ -210,26 +336,30 @@ router.route('/:user_id')
         }
     })
 
+
     .put(async (req, res) => {
+        // update  bio  and delete  avatar  
         try {
 
             const { user_id } = req.params;
             const data = req.body;
-            console.log('updatedata:', data)
+            console.log('updatedata:', data);
+
 
             if (!user_id) {
                 return res.status(400).json({ message: 'user_id is required' })
             }
 
-            const result = await Profile.updateOne(
+            const result = await Profile.findOneAndUpdate(
                 { user_id },
                 { $set: data },
+                { new: true }
             );
             console.log("update Result", result);
+            if (!result) {
+                return res.status(404).json({ message: 'Profile not found' });
+            }
 
-            if (result.matchedCount === 0 && result.modifiedCount === 0) {
-                return res.status(404).json({ message: ' profile not found ' });
-            };
             res.json({ msg: 'profile updated successfully' })
 
         } catch (error) {
@@ -260,69 +390,38 @@ router.route('/:user_id')
 
     });
 
+// /:userId/gallery is what loads when a user taps someone’s card in the profile list and opens their profile. 
+// The :userId in the URL is the MongoDB ID of the person being viewed.
+
 
 router.route('/:userId/gallery')
 
 
-    .get(async (req, res) => {
+    .get(chekFbToken,checkCurrentUser, async (req, res) => {
 
         const userId = req.params.userId.trim();
         console.log('received:', userId);
-        console.log("Database:", mongoose.connection.name);
-        console.log(Profile.collection.name);
-        console.log("mongooseUri:", process.env.MONGODB_URI)
-
+        if (!mongoose.isValidObjectId(userId)) {
+            return res.status(400).json({ success: false, message: 'Invalid user id' });
+        }
 
         try {
 
-            const allProfiles = await Profile.find();
-            console.log("Number of profiles:", allProfiles.length);
-            console.log("Profiles:", allProfiles);
-            // using populate  a monggose methode  that subsitue references(objectId)via  full document 
-            // my quarry style if the user exist means he has his profile meaning profile existe also 
-            const profile = await Profile.findOne({ user_id: userId })
-                .populate('gallery.photo')
-                .populate('gallery.video')
+            const profile = await findGallery(userId)
             if (!profile) {
-                return res.status(404).json({ error: 'profile not found ' })
+                return res.status(404).json({ message: "profile dose not existe" })
 
 
             }
 
-            const galleryMedia = profile.gallery.map((item) => {
-                if (item.photo) {
-                    return {
-
-                        type: 'photo',
-                        id: item.photo._id,
-                        url: item.photo.url,
-                        thumbnail: item.photo.thumbnail,
-                        title: item.photo.title,
-                        caption: item.photo.caption
-
-                    }
-                } else if (item.video) {
-                    return {
-                        type: 'video',
-                        id: item.video._id,
-                        url: item.video.url,
-                        thumbnail: item.video.thumbnail,
-                        title: item.video.title,
-                        description: item.video.description
-
-                    }
-
-
-                } else {
-                    return null
-                }
-
-            }).filter(item => item !== null)
-
-            return res.status(200).json({
-                success: true,
-                gallery: galleryMedia
+            res.status(200).json({ 
+                success: true, 
+                gallery:cleanGallery(profile.gallery),
+                isOwner: profile.user_id.equals(req.currentUser._id),
+                bioAvatar:coalescingProfile(profile)
+                  
             })
+
         } catch (error) {
             console.error('Error fetching gallery:', error);
             res.status(500).json({
@@ -350,8 +449,9 @@ router.route('/:userId/gallery/:mediaId')
             };
 
             // finding mediaId in the gallery 
-             console.log('mediaId:', mediaId);
-             console.log('📦 Gallery items (raw):', JSON.stringify(profile.gallery, null, 2));
+            console.log(' gallery mediaId:', mediaId);
+            // json.stringify(value, custom rule,indentation )
+            console.log(' Gallery items (raw):', JSON.stringify(profile.gallery, null, 2));
             const galleryMedia = profile.gallery.findIndex(item => item.photo?.toString() === mediaId || item.video?.toString() === mediaId);
 
             if (galleryMedia === -1) {
@@ -361,47 +461,71 @@ router.route('/:userId/gallery/:mediaId')
 
                 });
             };
-                // 3. Determine media type and remove from gallery
-                const mediaItem = profile.gallery[galleryMedia];
-                const isPhoto = !!mediaItem.photo;
+            // 3. Determine media type and remove from gallery
+            const mediaItem = profile.gallery[galleryMedia];
+            //  converting value to a boolean   whit !! if isPhoto is true then  galleryMedia is photo and delete from
+            // profile.gallery if it false or undefined then galleryMedia is video delete from profile.gallery
+            const isPhoto = !!mediaItem.photo;
 
-                // Remove from gallery array
-                profile.gallery.splice(galleryMedia, 1);
-                await profile.save();
+            // Remove from gallery array
+            profile.gallery.splice(galleryMedia, 1);
+            await profile.save();
 
-                // 4. Delete the actual media document
-                if (isPhoto) {
-                    await Photo.findByIdAndDelete(mediaId);
-                } else {
-                    await Video.findByIdAndDelete(mediaId);
+            // 4. Delete the actual media document
+            // if (isPhoto) {
+            //     await Photo.findByIdAndDelete(mediaId);
+            // } else {
+            //     await Video.findByIdAndDelete(mediaId);
+            // }
+
+            const mediaModel = isPhoto ? Photo : Video;
+            const deleteDoc = await mediaModel.findByIdAndDelete(mediaId)
+
+
+
+            //   firebase deletion
+            // const fileRef =  bucket.file(mediaItem.filePath)
+            // await  fileRef.delete();
+            let firebaseStorage = false;
+
+            if (deleteDoc.filePath) {
+                try {
+                    await bucket.file(deleteDoc.filePath).delete();
+                    console.log('firebase deletion succeed')
+                    firebaseStorage = true;
+                } catch (e) {
+                    console.log('firebase deletion is bugging :', e.message)
                 }
-
-
-                return res.status(200).json({
-                    success:true,
-                    message:'item deleted'
-                })
-
-
-            
+            } else {
+                console.log("firebase deletion is skipped ")
+            }
 
 
 
+            return res.status(200).json({
+                success: true,
+                message: 'item deleted from  db doc and bucket :)'
+            })
 
 
-        }catch(error)
-        {
+
+
+
+
+
+
+        } catch (error) {
             console.log(error)
             res.status(500).json({
-                success:false,
-                message:'failed to delete media ',
-                error:error.message
+                success: false,
+                message: 'failed to delete media ',
+                error: error.message
 
 
             })
 
         };
-        
+
 
     })
 

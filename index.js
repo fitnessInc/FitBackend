@@ -1,5 +1,4 @@
-console.log('CWD:', process.cwd());
-console.log('ENV URI:', process.env.MONGODB_URI);
+
 require('dotenv').config();
 
 if (!process.env.MONGODB_URI){
@@ -7,53 +6,41 @@ if (!process.env.MONGODB_URI){
 };
  const express = require('express');
 const http = require('http');
-const messageRouter = require("./routes/message");
 const profileRouter =  require('./routes/userProfile');
 const userRouter = require('./routes/user');
 const uploadRouter = require('./routes/fileUpload');
-const galleryThumbUrl= require('./routes/thumbnailUrl')
+const galleryThumbUrl= require('./routes/thumbnailUrl');
+
 
 const cors = require('cors');
-
 const db= require('./conectiondb/dbConnect')
-const { init } = require('./socket');
+
 
       
-
-//  creation of express application //
 const app = express();
 const server = http.createServer(app);
 
-//middleware//
   
 app.use(express.json());
 app.use(cors());
 
+app.get('/', (req, res) => res.send('API is running'));
 
-//routes// mounting the routes and defining prefixes for routes 
-app.use('/messages', messageRouter);
+
 app.use('/profiles' ,profileRouter);
 app.use('/users',userRouter);
-// app.use('/uploads', uploadRouter);
 app.use('/upload',uploadRouter);
-// gallery  thumbnail  route mounting 
-app.use('/gaThumbUrl',galleryThumbUrl)
-
-//port hostname//
+app.use('/gaThumbUrl',galleryThumbUrl);
 
 const port = process.env.PORT || 3000;
-const hostname = 'localhost';
-// console.log("environemt var:",process.env)
+const hostname = '0.0.0.0';
 
-//db connection//
 
 (async ()=>{
     try{
-        await db.connect();// data base connection 
-    init(server)// second sock.Io connection 
- 
+        await db.connect();
+    
 
-    // then server boostrap 
      server.listen(port,hostname,()=>{
         console.log(`the middle man is running at http://${hostname}:${port}`);
      })
@@ -63,11 +50,28 @@ const hostname = 'localhost';
     }
 })();
 
-const shutdown = async()=>{
-    console.log('middle man is shutting down');
-    await db.disconnect();
-    server.close(()=>process.exit(0))
+let shuttingDown = false;
+
+const shutdown = async(signal)=>{
+    if(shuttingDown) return;
+     shuttingDown =true;
+     console.log(`middle man is shutting down (${signal})`);
+
+  setTimeout(() => process.exit(1), 10000).unref(); // safety net
+
+   server.close(async ()=>{
+    try{
+         await db.disconnect();
+
+    }catch (err) {
+      console.log('error during shutdown', err);
+    }
+    process.exit(0)
+
+   })
+    
+   
 };
 
-process.on('SIGINT', shutdown);// will be fire in production mode
-process.on('SIGTERM', shutdown);// will be fire in production mode
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);

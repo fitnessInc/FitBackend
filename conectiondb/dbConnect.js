@@ -29,10 +29,7 @@ class Datab {
     } catch (err) {
       console.error('MongoDB connection failed:', err.message);
 
-      if (process.env.NODE_ENV === 'production') {
-        // Fail fast in production
-        process.exit(1);
-      }
+       throw err; 
     }
   }
 

@@ -107,10 +107,9 @@ exports.imageThumb = onObjectFinalized({ secrets: [mongoUri] }, async (event) =>
     const imageDoc = await image.findOneAndUpdate(
       { url: `https://storage.googleapis.com/${bucketName}/${filePath}` },  // ✅ match url
       { thumbnail: publicUrl },
-      { new:true,
-        upsert:true
-
-      }
+      { new:true}
+      
+      
     );
 
     console.log('image saved in db', imageDoc)
@@ -225,14 +224,14 @@ exports.videoThumb = onObjectFinalized({ memory: "2GiB", cpu: 2, timeoutSeconds:
     const publicUrl1 = `https://storage.googleapis.com/${bucketName}/${thumbnailFolder}`;
 
     // uploading the the pubilc url in db  specially updating the  thumbnailUrl prop  in video  doc
-
+    const videoUrl = `https://storage.googleapis.com/${bucketName}/${filePath}`;
     const videoDoc = await video.findOneAndUpdate(
-      { url: filePath },
+      { url: videoUrl },
       { thumbnail: publicUrl1 },
-      { new:true,
-         upsert:true
+      { new:true}
+      
 
-      },
+      
     );
 
     if (videoDoc) {

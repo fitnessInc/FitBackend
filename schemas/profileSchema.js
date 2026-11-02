@@ -3,12 +3,15 @@ const { Schema } = mongoose;
 
 const profileSchema = new Schema({
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    full_Name: { type: String, required: false },
-    certification: { type: String,required:false },
+    full_Name: { type: String, require: false },
+    certification: { type: String,require:false },
+    function:{ type: String,require:false },
     email:{type: String ,required:false},
+    phoneNumber:{type: String ,required:false},
     avatar: {
         uri: { type: String },
-        thumbnail: { type: String }
+        thumbnail: { type: String },
+        filePath:{type:String,require:false},
     },
 
     gallery: [

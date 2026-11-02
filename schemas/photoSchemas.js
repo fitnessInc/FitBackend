@@ -7,7 +7,9 @@ const PhotoSchema = new Schema({
     title: { type: String, },
     url: { type: String, required:true },
     thumbnail:{type: String},
+    filePath:{type:String,require:false},
     caption: { type: String }
+
 }, { timestamps: true });
 
 const Photo = mongoose.model('Photo', PhotoSchema);
