@@ -60,6 +60,7 @@ function findGallery(userId) {
 function coalescingProfile(profile) {
 
     return {
+        profile_id:profile.profile_id,
         full_Name: profile.full_Name,
         certification: profile.certification,
         function: profile.function,
