@@ -93,6 +93,8 @@ router.route('/me/gallery')
     .get(chekFbToken,checkCurrentUser,async (req, res) => {
 
         try {
+            console.log('me/gallery currentUser:', req.currentUser?._id, req.currentUser?.uid);
+
         
             const profile = await findGallery(req.currentUser._id);
             if (!profile) return res.status(404).json({ error: 'Profile not found' });
