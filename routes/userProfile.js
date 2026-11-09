@@ -15,6 +15,19 @@ const checkCurrentUser = require('./checkCurrentUser')
 
 
 
+const proBio = (profile) => ({
+    full_Name: profile.full_Name,
+    bio: profile.bio,
+    avatar: profile.avatar,
+    certification: profile.certification,
+
+})
+
+
+
+
+
+
 function cleanGallery(gallery) {
 
     return (
@@ -60,7 +73,7 @@ function findGallery(userId) {
 function coalescingProfile(profile) {
 
     return {
-        profile_id:profile._id,
+        profile_id: profile._id,
         full_Name: profile.full_Name,
         certification: profile.certification,
         function: profile.function,
@@ -74,44 +87,76 @@ function coalescingProfile(profile) {
 
 router.route(("/"))
 
-.get(chekFbToken, checkCurrentUser, async (req, res) => {
-    try {
-      const profiles = await Profile.find({ user_id: { $ne: req.currentUser._id } })
-        .select('-email -gallery -__v');
-      res.status(200).json({ success: true, profiles });
-    } catch (e) {
-      console.log('List profiles error:', e);
-      res.status(500).json({ success: false, message: 'Server error' });
-    }
-  });
-    
+    .get(chekFbToken, checkCurrentUser, async (req, res) => {
+        try {
+            const profiles = await Profile.find({ user_id: { $ne: req.currentUser._id } })
+                .select('-email -gallery -__v');
+            res.status(200).json({ success: true, profiles });
+        } catch (e) {
+            console.log('List profiles error:', e);
+            res.status(500).json({ success: false, message: 'Server error' });
+        }
+    });
 
-        
+// route fetching profile bio 
+
+
+
+
+
 
 // the bellow  route fetch   user's own gallery 
 
 router.route('/me/gallery')
-    .get(chekFbToken,checkCurrentUser,async (req, res) => {
+    .get(chekFbToken, checkCurrentUser, async (req, res) => {
 
         try {
             console.log('me/gallery currentUser:', req.currentUser?._id, req.currentUser?.uid);
 
-        
+
             const profile = await findGallery(req.currentUser._id);
             if (!profile) return res.status(404).json({ error: 'Profile not found' });
 
-            res.status(200).json({ success: true, isOwner: true,bioAvatar:coalescingProfile(profile),gallery: cleanGallery(profile.gallery) })
+            res.status(200).json({ success: true, isOwner: true, bioAvatar: coalescingProfile(profile), gallery: cleanGallery(profile.gallery) })
         } catch (e) {
             console.log(e);
             res.status(500).json({ success: false, message: 'server error ' })
         }
 
     })
+
+// route fetching profile bio 
+router.route('/me')
+    .get(chekFbToken, checkCurrentUser, async (req, res) => {
+
+        try {
+
+            const profile = await Profile.findOne({ user_id: req.currentUser._id })
+            if (!profile) {
+                return res.status(404).json({ success: false, message: 'profile not found' });
+
+            }
+
+            res.status(200).json({
+                success: true,
+                isOwner: true,
+                profile: proBio(profile)
+            })
+
+
+        } catch (e) {
+            console.error('error from GET /profiles/me:', e);
+            res.status(500).json({ success: false, message: 'Server error' });
+        }
+
+
+
+    })
 // route  post and update  bio 
 router.route('/me')
     .put(chekFbToken, checkCurrentUser, async (req, res) => {
         try {
-            const bio = ['full_Name', 'certification', 'function'];
+            const bio = ['full_Name', 'certification', 'function', 'email', "phoneNumber"];
             const bioUpdate = {};
 
             for (const field of bio) {
@@ -128,7 +173,7 @@ router.route('/me')
                 { user_id: req.currentUser._id },
                 { $set: bioUpdate },
                 { new: true, runValidators: true },
-                {upsert:true}
+                { upsert: true }
             );
 
             if (!profile) {
@@ -393,6 +438,40 @@ router.route('/:user_id')
 
     });
 
+// route of viwedUser   profile.bio 
+router.route('/:userId')
+
+.get(chekFbToken, checkCurrentUser,async(req,res)=>{
+    try {
+      const { userId } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json({ success: false, message: 'Invalid user id' });
+      }
+
+      const profile = await Profile.findOne({ user_id: userId });
+      if (!profile) {
+        return res.status(404).json({ success: false, message: 'Profile not found' });
+      }
+
+      res.status(200).json({
+        success: true,
+        isOwner: userId === req.currentUser._id.toString(),
+        profile: proBio(profile),    // public fields only
+      });
+    } catch (e) {
+      console.error('error from GET /profiles/:userId:', e);
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+
+})
+
+
+    
+
+
+
+
+
 // /:userId/gallery is what loads when a user taps someone’s card in the profile list and opens their profile. 
 // The :userId in the URL is the MongoDB ID of the person being viewed.
 
@@ -400,7 +479,7 @@ router.route('/:user_id')
 router.route('/:userId/gallery')
 
 
-    .get(chekFbToken,checkCurrentUser, async (req, res) => {
+    .get(chekFbToken, checkCurrentUser, async (req, res) => {
 
         const userId = req.params.userId.trim();
         console.log('received:', userId);
@@ -417,12 +496,12 @@ router.route('/:userId/gallery')
 
             }
 
-            res.status(200).json({ 
-                success: true, 
-                gallery:cleanGallery(profile.gallery),
+            res.status(200).json({
+                success: true,
+                gallery: cleanGallery(profile.gallery),
                 isOwner: profile.user_id.equals(req.currentUser._id),
-                bioAvatar:coalescingProfile(profile)
-                  
+                bioAvatar: coalescingProfile(profile)
+
             })
 
         } catch (error) {
