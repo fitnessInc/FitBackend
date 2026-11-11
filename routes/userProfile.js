@@ -20,7 +20,8 @@ const proBio = (profile) => ({
     avatar: profile.avatar,
     certification: profile.certification,
     function:profile.function,
-    certification:profile.certification
+    email:profile.email 
+    
 
 
 })
