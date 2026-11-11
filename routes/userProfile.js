@@ -17,9 +17,11 @@ const checkCurrentUser = require('./checkCurrentUser')
 
 const proBio = (profile) => ({
     full_Name: profile.full_Name,
-    bio: profile.bio,
     avatar: profile.avatar,
     certification: profile.certification,
+    function:profile.function,
+    certification:profile.certification
+
 
 })
 
@@ -98,10 +100,6 @@ router.route(("/"))
         }
     });
 
-// route fetching profile bio 
-
-
-
 
 
 
@@ -173,14 +171,14 @@ router.route('/me')
                 { user_id: req.currentUser._id },
                 { $set: bioUpdate },
                 { new: true, runValidators: true },
-                { upsert: true }
+                
             );
 
             if (!profile) {
                 return res.status(404).json({ success: false, message: 'Profile not found' });
             }
 
-            res.json({ success: true, message: 'Profile updated', profile });
+            res.json({ success: true, message: 'Profile updated', profile :proBio(profile)});
         } catch (e) {
             console.log('Edit profile error:', e);
             res.status(500).json({ success: false, message: 'Server error' });
