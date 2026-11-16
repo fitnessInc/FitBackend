@@ -21,7 +21,7 @@ const proBio = (profile) => ({
     certification: profile.certification,
     function:profile.function,
     email:profile.email 
-    
+
 
 
 })
@@ -86,7 +86,7 @@ function coalescingProfile(profile) {
 
 }
 
-// the  below route get all profiles just bio 
+// the  below route get all profiles just bio  and avatar
 
 router.route(("/"))
 
