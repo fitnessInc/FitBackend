@@ -9,7 +9,8 @@ const Video = require("../schemas/videoSchema")
 const { bucket } = require('../firebase/firebaseConfig');
 const Profile = require('../schemas/profileSchema');
 const checkCurrentUser= require('./checkCurrentUser');
-const chekFbToken = require('./midFirebaseToken')
+const chekFbToken = require('./midFirebaseToken');
+const mongoose = require('mongoose');
 
 
 
