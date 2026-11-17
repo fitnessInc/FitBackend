@@ -170,9 +170,9 @@ router.route('/me/media/:type/:mediaId')
         return res.status(403).json({ success: false, message: 'Not allowed' });
       }
 
-      const media = await Model.findById(mediaId);
-      if (media) {
-        const paths = [media.filePath, media.thumbnailPath].filter(Boolean);
+      const meta = await Model.findById(mediaId);
+      if (meta) {
+        const paths = [meta.filePath, meta.thumbnailPath].filter(Boolean);
         await Promise.all(
           paths.map((p) => bucket.file(p).delete({ ignoreNotFound: true }))
         );
