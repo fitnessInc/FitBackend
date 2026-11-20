@@ -19,8 +19,8 @@ const proBio = (profile) => ({
     full_Name: profile.full_Name,
     avatar: profile.avatar,
     certification: profile.certification,
-    function:profile.function,
-    email:profile.email 
+    function: profile.function,
+    email: profile.email
 
 
 
@@ -172,19 +172,62 @@ router.route('/me')
                 { user_id: req.currentUser._id },
                 { $set: bioUpdate },
                 { new: true, runValidators: true },
-                
+
             );
 
             if (!profile) {
                 return res.status(404).json({ success: false, message: 'Profile not found' });
             }
 
-            res.json({ success: true, message: 'Profile updated', profile :proBio(profile)});
+            res.json({ success: true, message: 'Profile updated', profile: proBio(profile) });
         } catch (e) {
             console.log('Edit profile error:', e);
             res.status(500).json({ success: false, message: 'Server error' });
         }
-    });
+    })
+    
+    
+    .delete(chekFbToken, checkCurrentUser, async (req, res) => {
+        const user = req.currentUser;   
+
+        try {
+            onst [photos, videos, profile] = await Promise.all([
+                Photo.find({ user_id: user._id }),
+                Video.find({ user_id: user._id }),
+                Profile.findOne({ user_id: user._id }),
+            ]);
+
+            const paths = [
+                ...photos.flatMap((p) => [p.filePath, p.thumbnailPath]),
+                ...videos.flatMap((v) => [v.filePath, v.thumbnailPath]),
+                profile?.avatarPath,   
+            ].filter(Boolean);
+
+            const results = await Promise.allSettled(
+                paths.map((p) => bucket.file(p).delete({ ignoreNotFound: true }))
+            );
+            const failed = results.filter((r) => r.status === 'rejected');
+            if (failed.length) console.error('Some files failed to delete:', failed);
+
+            await Promise.all([
+                Photo.deleteMany({ user_id: user._id }),
+                Video.deleteMany({ user_id: user._id }),
+                Profile.deleteOne({ user_id: user._id }),
+            ]);
+            await User.deleteOne({ _id: user._id });
+
+            await admin.auth().deleteUser(user.uid);   // ← uid from the User doc
+
+            res.json({ success: true, message: 'Account deleted' });
+        } catch (error) {
+            console.error('Delete account error:', error);
+            res.status(500).json({ success: false, message: 'Failed to delete account' });
+        }
+
+    })
+
+
+
 
 
 router.route('/profile/:userId')
@@ -440,32 +483,32 @@ router.route('/:user_id')
 // route of viwedUser   profile.bio 
 router.route('/:userId')
 
-.get(chekFbToken, checkCurrentUser,async(req,res)=>{
-    try {
-      const { userId } = req.params;
-      if (!mongoose.Types.ObjectId.isValid(userId)) {
-        return res.status(400).json({ success: false, message: 'Invalid user id' });
-      }
+    .get(chekFbToken, checkCurrentUser, async (req, res) => {
+        try {
+            const { userId } = req.params;
+            if (!mongoose.Types.ObjectId.isValid(userId)) {
+                return res.status(400).json({ success: false, message: 'Invalid user id' });
+            }
 
-      const profile = await Profile.findOne({ user_id: userId });
-      if (!profile) {
-        return res.status(404).json({ success: false, message: 'Profile not found' });
-      }
+            const profile = await Profile.findOne({ user_id: userId });
+            if (!profile) {
+                return res.status(404).json({ success: false, message: 'Profile not found' });
+            }
 
-      res.status(200).json({
-        success: true,
-        isOwner: userId === req.currentUser._id.toString(),
-        profile: proBio(profile),    // public fields only
-      });
-    } catch (e) {
-      console.error('error from GET /profiles/:userId:', e);
-      res.status(500).json({ success: false, message: 'Server error' });
-    }
+            res.status(200).json({
+                success: true,
+                isOwner: userId === req.currentUser._id.toString(),
+                profile: proBio(profile),    // public fields only
+            });
+        } catch (e) {
+            console.error('error from GET /profiles/:userId:', e);
+            res.status(500).json({ success: false, message: 'Server error' });
+        }
 
-})
+    })
 
 
-    
+
 
 
 
